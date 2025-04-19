@@ -66,11 +66,28 @@ For more detailed instructions, see [INSTALL.md](INSTALL.md).
 
 ## Features
 
-- Agent-assisted CAD modeling
+- Agent-assisted CAD modeling with enhanced capabilities
 - Intelligent design suggestions
 - Automated routine tasks
 - Knowledge-based design support
 - Multi-agent architecture (design and analysis agents)
+
+## Agent Capabilities
+
+### Design Agent
+The Design Agent can help you create and modify CAD models with these capabilities:
+- Create primitive shapes (boxes, cylinders, spheres)
+- Perform boolean operations (fusion, cut, common)
+- Position and rotate objects in 3D space
+- List existing objects in the model
+- Save the current model
+
+### Analysis Agent
+The Analysis Agent can provide insights about your CAD models:
+- Calculate object properties (volume, surface area, center of mass)
+- Analyze model structure and identify potential issues
+- Provide suggestions for model optimization
+- Review design for manufacturability
 
 ## Architecture
 
@@ -79,6 +96,16 @@ The system consists of multiple specialized agents that work together to provide
 1. **Root Agent**: Coordinates between specialized agents based on user intent
 2. **Design Agent**: Creates and modifies CAD models
 3. **Analysis Agent**: Evaluates and analyzes CAD models
+
+This multi-agent architecture leverages Google ADK's delegation capabilities to route user queries to the appropriate agent based on their intent.
+
+## System Components
+
+The CAD Agent system integrates these key components:
+1. **FreeCAD**: The open-source CAD application that handles the actual modeling
+2. **FreeCAD RPC Server (port 9876)**: Provides direct control of FreeCAD via XML-RPC
+3. **MCP Server (port 5050)**: Translates between the RPC server and the MCP protocol
+4. **Google ADK**: The framework that powers the intelligent agents
 
 ## Prerequisites
 

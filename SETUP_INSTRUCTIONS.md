@@ -51,7 +51,7 @@ cp -r freecad-mcp/addon/FreeCADMCP ~/Library/Application\ Support/FreeCAD/Mod/
 
 1. In FreeCAD, select the "MCP Addon" workbench from the workbench selector dropdown
 2. Click the "Start RPC Server" button in the MCP Addon toolbar
-3. You should see a message in the FreeCAD console: "RPC Server started at localhost:9875"
+3. You should see a message in the FreeCAD console: "RPC Server started at localhost:9876"
 
 ### 5. Set Up the Google ADK Environment
 
@@ -79,7 +79,7 @@ python test_freecad_connection.py
 
 If everything is set up correctly, you should see:
 ```
-✅ Successfully connected to FreeCAD RPC server on port 9875
+✅ Successfully connected to FreeCAD RPC server on port 9876
 ✅ MCP server is running on port 5050
 ✅ All connections successful!
 ✅ Successfully connected to both FreeCAD RPC and MCP servers!
@@ -106,7 +106,7 @@ If you encounter connection issues:
 1. Make sure FreeCAD is running
 2. Ensure the MCP server is enabled in FreeCAD's preferences
 3. Check that the RPC server is started from the MCP Addon workbench
-4. Verify that both ports (5050 for MCP and 9875 for RPC) are available and not blocked by firewalls
+4. Verify that both ports (5050 for MCP and 9876 for RPC) are available and not blocked by firewalls
 
 ### Missing Tools
 
@@ -121,7 +121,7 @@ If the ADK agent can't find the FreeCAD tools:
 The CAD Agent system uses a multi-component architecture:
 
 1. **FreeCAD**: The CAD application that handles the actual modeling
-2. **FreeCAD RPC Server (port 9875)**: Started from the MCP Addon workbench, provides an XML-RPC interface to control FreeCAD
+2. **FreeCAD RPC Server (port 9876)**: Started from the MCP Addon workbench, provides an XML-RPC interface to control FreeCAD
 3. **FreeCAD MCP Server (port 5050)**: Enabled in FreeCAD preferences, translates between the RPC server and the MCP protocol
 4. **Google ADK Agent**: Connects to the MCP server to provide AI assistance for CAD modeling
 

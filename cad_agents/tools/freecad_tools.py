@@ -121,6 +121,204 @@ doc.recompute()
             "error_message": f"Error creating cylinder: {str(e)}"
         }
 
+def create_sphere(radius: float, name: str = "Sphere") -> dict:
+    """Create a sphere in FreeCAD.
+    
+    Args:
+        radius (float): Radius of the sphere
+        name (str, optional): Name of the sphere. Defaults to "Sphere".
+    
+    Returns:
+        dict: A dictionary with the status and information about the created sphere.
+    """
+    client = get_mcp_client()
+    if client is None:
+        return {
+            "status": "error",
+            "error_message": "Failed to connect to FreeCAD MCP server."
+        }
+    
+    try:
+        # Create a new document if none exists
+        docs = client.list_documents()
+        if not docs:
+            client.create_document("CADAgentDocument")
+        
+        # Create the sphere
+        result = client.run_python_code(f"""
+import FreeCAD as App
+import Part
+doc = App.activeDocument()
+sphere = doc.addObject("Part::Sphere", "{name}")
+sphere.Radius = {radius}
+doc.recompute()
+""")
+        
+        return {
+            "status": "success",
+            "message": f"Created sphere with radius {radius}",
+            "object_name": name
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": f"Error creating sphere: {str(e)}"
+        }
+
+def boolean_operation(obj1_name: str, obj2_name: str, operation: str = "fusion", result_name: str = "BooleanResult") -> dict:
+    """Perform a boolean operation between two objects in FreeCAD.
+    
+    Args:
+        obj1_name (str): Name of the first object
+        obj2_name (str): Name of the second object
+        operation (str, optional): Boolean operation type: "fusion", "cut", or "common". Defaults to "fusion".
+        result_name (str, optional): Name of the result object. Defaults to "BooleanResult".
+    
+    Returns:
+        dict: A dictionary with the status and information about the boolean operation.
+    """
+    client = get_mcp_client()
+    if client is None:
+        return {
+            "status": "error",
+            "error_message": "Failed to connect to FreeCAD MCP server."
+        }
+    
+    # Validate operation type
+    valid_operations = ["fusion", "cut", "common"]
+    if operation not in valid_operations:
+        return {
+            "status": "error",
+            "error_message": f"Invalid operation type: {operation}. Valid types are: {', '.join(valid_operations)}"
+        }
+    
+    try:
+        # Perform the boolean operation
+        result = client.run_python_code(f"""
+import FreeCAD as App
+import Part
+doc = App.activeDocument()
+
+# Check if objects exist
+obj1 = doc.getObject("{obj1_name}")
+obj2 = doc.getObject("{obj2_name}")
+
+if obj1 is None:
+    print(f"Error: Object '{obj1_name}' not found")
+    result = {{"status": "error", "error_message": f"Object '{obj1_name}' not found"}}
+elif obj2 is None:
+    print(f"Error: Object '{obj2_name}' not found")
+    result = {{"status": "error", "error_message": f"Object '{obj2_name}' not found"}}
+else:
+    # Create the boolean operation
+    if "{operation}" == "fusion":
+        boolean = doc.addObject("Part::Fuse", "{result_name}")
+    elif "{operation}" == "cut":
+        boolean = doc.addObject("Part::Cut", "{result_name}")
+    elif "{operation}" == "common":
+        boolean = doc.addObject("Part::Common", "{result_name}")
+    
+    boolean.Base = obj1
+    boolean.Tool = obj2
+    doc.recompute()
+    result = {{"status": "success", "object_name": "{result_name}"}}
+
+print(f"Boolean result: {{result}}")
+""")
+        
+        # Check if the operation was successful
+        if "success" in result.get("output", ""):
+            return {
+                "status": "success",
+                "message": f"Performed {operation} operation between {obj1_name} and {obj2_name}",
+                "object_name": result_name
+            }
+        else:
+            # Extract error message from output
+            error_msg = result.get("output", "Unknown error")
+            return {
+                "status": "error",
+                "error_message": f"Error performing boolean operation: {error_msg}"
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": f"Error performing boolean operation: {str(e)}"
+        }
+
+def set_object_placement(obj_name: str, x: float = 0, y: float = 0, z: float = 0, 
+                         axis_x: float = 0, axis_y: float = 0, axis_z: float = 1, 
+                         angle: float = 0) -> dict:
+    """Set the placement (position and rotation) of an object in FreeCAD.
+    
+    Args:
+        obj_name (str): Name of the object to position
+        x (float, optional): X coordinate. Defaults to 0.
+        y (float, optional): Y coordinate. Defaults to 0.
+        z (float, optional): Z coordinate. Defaults to 0.
+        axis_x (float, optional): X component of rotation axis. Defaults to 0.
+        axis_y (float, optional): Y component of rotation axis. Defaults to 0.
+        axis_z (float, optional): Z component of rotation axis. Defaults to 1.
+        angle (float, optional): Rotation angle in degrees. Defaults to 0.
+    
+    Returns:
+        dict: A dictionary with the status and information about the placement operation.
+    """
+    client = get_mcp_client()
+    if client is None:
+        return {
+            "status": "error",
+            "error_message": "Failed to connect to FreeCAD MCP server."
+        }
+    
+    try:
+        # Set the object placement
+        result = client.run_python_code(f"""
+import FreeCAD as App
+import Part
+from FreeCAD import Base
+doc = App.activeDocument()
+
+# Check if object exists
+obj = doc.getObject("{obj_name}")
+
+if obj is None:
+    print(f"Error: Object '{obj_name}' not found")
+    result = {{"status": "error", "error_message": f"Object '{obj_name}' not found"}}
+else:
+    # Create a placement with position and rotation
+    position = Base.Vector({x}, {y}, {z})
+    rotation_axis = Base.Vector({axis_x}, {axis_y}, {axis_z})
+    rotation = Base.Rotation(rotation_axis, {angle})
+    placement = Base.Placement(position, rotation)
+    
+    # Apply the placement to the object
+    obj.Placement = placement
+    doc.recompute()
+    result = {{"status": "success"}}
+
+print(f"Placement result: {{result}}")
+""")
+        
+        # Check if the operation was successful
+        if "success" in result.get("output", ""):
+            return {
+                "status": "success",
+                "message": f"Set placement of {obj_name} to position ({x}, {y}, {z}) with rotation ({axis_x}, {axis_y}, {axis_z}, {angle})"
+            }
+        else:
+            # Extract error message from output
+            error_msg = result.get("output", "Unknown error")
+            return {
+                "status": "error",
+                "error_message": f"Error setting object placement: {error_msg}"
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": f"Error setting object placement: {str(e)}"
+        }
+
 def list_objects() -> dict:
     """List all objects in the active FreeCAD document.
     
