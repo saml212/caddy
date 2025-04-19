@@ -1,0 +1,207 @@
+diff --git a/addon/FreeCADMCP/rpc_server/rpc_server.py b/addon/FreeCADMCP/rpc_server/rpc_server.py
+index 51bafa9..b9ef79a 100644
+--- a/addon/FreeCADMCP/rpc_server/rpc_server.py
++++ b/addon/FreeCADMCP/rpc_server/rpc_server.py
+@@ -385,41 +385,107 @@ class FreeCADRPC:
+             return str(e)
+ 
+ 
+-def start_rpc_server(host="localhost", port=9875):
++def start_rpc_server(host="localhost", port=9876):
+     global rpc_server_thread, rpc_server_instance
++    FreeCAD.Console.PrintMessage("Attempting to start RPC server...\\n")
+ 
+     if rpc_server_instance:
+-        return "RPC Server already running."
+-
+-    rpc_server_instance = SimpleXMLRPCServer(
+-        (host, port), allow_none=True, logRequests=False
+-    )
+-    rpc_server_instance.register_instance(FreeCADRPC())
++        msg = "RPC Server already running.\\n"
++        FreeCAD.Console.PrintMessage(msg)
++        return msg
++
++    try:
++        FreeCAD.Console.PrintMessage(f"Instantiating SimpleXMLRPCServer on {host}:{port}...\\n")
++        rpc_server_instance = SimpleXMLRPCServer(
++            (host, port), allow_none=True, logRequests=False
++        )
++        FreeCAD.Console.PrintMessage("Registering FreeCADRPC instance...\\n")
++        rpc_server_instance.register_instance(FreeCADRPC())
++        FreeCAD.Console.PrintMessage("RPC instance registered.\\n")
++    except Exception as e:
++        error_msg = f"!!! FAILED to instantiate SimpleXMLRPCServer: {str(e)}\\n"
++        FreeCAD.Console.PrintError(error_msg)
++        print(error_msg)
++        rpc_server_instance = None
++        return error_msg
+ 
+     def server_loop():
+-        FreeCAD.Console.PrintMessage(f"RPC Server started at {host}:{port}\n")
+-        rpc_server_instance.serve_forever()
++        try:
++            start_msg = f"RPC Server started at {host}:{port}\\n"
++            FreeCAD.Console.PrintMessage(start_msg)
++            print(f"[RPC Server Thread] {start_msg}")
++            rpc_server_instance.serve_forever()
++            print("[RPC Server Thread] serve_forever() exited.")
++        except Exception as e:
++            error_msg = f"!!! EXCEPTION in server_loop thread: {str(e)}\\n"
++            FreeCAD.Console.PrintError(error_msg)
++            print(error_msg)
++        finally:
++            print("[RPC Server Thread] Exiting.")
++
++
++    try:
++        FreeCAD.Console.PrintMessage("Starting server thread...\\n")
++        rpc_server_thread = threading.Thread(target=server_loop, daemon=True)
++        rpc_server_thread.start()
++        FreeCAD.Console.PrintMessage("Server thread started.\\n")
++    except Exception as e:
++        error_msg = f"!!! FAILED to start server thread: {str(e)}\\n"
++        FreeCAD.Console.PrintError(error_msg)
++        print(error_msg)
++        if rpc_server_instance:
++            try:
++                rpc_server_instance.server_close()
++            except Exception as close_e:
++                 FreeCAD.Console.PrintError(f"Error closing server socket during thread start failure: {close_e}\\n")
++        rpc_server_instance = None
++        rpc_server_thread = None
++        return error_msg
+ 
+-    rpc_server_thread = threading.Thread(target=server_loop, daemon=True)
+-    rpc_server_thread.start()
+ 
+-    QTimer.singleShot(500, process_gui_tasks)
++    try:
++        FreeCAD.Console.PrintMessage("Scheduling GUI task processor...\\n")
++        QTimer.singleShot(500, process_gui_tasks)
++        FreeCAD.Console.PrintMessage("GUI task processor scheduled.\\n")
++    except Exception as e:
++         error_msg = f"!!! FAILED to schedule QTimer: {str(e)}\\n"
++         FreeCAD.Console.PrintError(error_msg)
++         print(error_msg)
+ 
+-    return f"RPC Server started at {host}:{port}."
++    final_msg = f"RPC Server start sequence initiated for {host}:{port}. Check thread status.\\n"
++    FreeCAD.Console.PrintMessage(final_msg)
++    return final_msg
+ 
+ 
+ def stop_rpc_server():
+     global rpc_server_instance, rpc_server_thread
++    FreeCAD.Console.PrintMessage("Attempting to stop RPC server...\\n")
+ 
+     if rpc_server_instance:
+-        rpc_server_instance.shutdown()
+-        rpc_server_thread.join()
+-        rpc_server_instance = None
+-        rpc_server_thread = None
+-        FreeCAD.Console.PrintMessage("RPC Server stopped.\n")
+-        return "RPC Server stopped."
++        try:
++            FreeCAD.Console.PrintMessage("Calling server shutdown()...\\n")
++            rpc_server_instance.shutdown()
++            FreeCAD.Console.PrintMessage("Joining server thread...\\n")
++            rpc_server_thread.join(timeout=2.0)
++            if rpc_server_thread.is_alive():
++                 FreeCAD.Console.PrintError("Server thread did not exit after shutdown!\\n")
++            else:
++                 FreeCAD.Console.PrintMessage("Server thread joined successfully.\\n")
+ 
+-    return "RPC Server was not running."
++        except Exception as e:
++             error_msg = f"!!! EXCEPTION during server shutdown/join: {str(e)}\\n"
++             FreeCAD.Console.PrintError(error_msg)
++             print(error_msg)
++        finally:
++             rpc_server_instance = None
++             rpc_server_thread = None
++             msg = "RPC Server stopped (or cleanup attempted).\\n"
++             FreeCAD.Console.PrintMessage(msg)
++             return msg
++    else:
++        msg = "RPC Server was not running.\\n"
++        FreeCAD.Console.PrintMessage(msg)
++        return msg
+ 
+ 
+ class StartRPCServerCommand:
+@@ -427,11 +493,19 @@ class StartRPCServerCommand:
+         return {"MenuText": "Start RPC Server", "ToolTip": "Start RPC Server"}
+ 
+     def Activated(self):
+-        msg = start_rpc_server()
+-        FreeCAD.Console.PrintMessage(msg + "\n")
++        FreeCAD.Console.PrintMessage("StartRPCServerCommand Activated.\\n")
++        try:
++            msg = start_rpc_server()
++            FreeCAD.Console.PrintMessage(f"start_rpc_server returned: {msg}\\n")
++        except Exception as e:
++            error_msg = f"!!! EXCEPTION calling start_rpc_server: {str(e)}\\n"
++            FreeCAD.Console.PrintError(error_msg)
++            print(error_msg)
++
+ 
+     def IsActive(self):
+-        return True
++        global rpc_server_instance
++        return rpc_server_instance is None
+ 
+ 
+ class StopRPCServerCommand:
+@@ -439,11 +513,18 @@ class StopRPCServerCommand:
+         return {"MenuText": "Stop RPC Server", "ToolTip": "Stop RPC Server"}
+ 
+     def Activated(self):
+-        msg = stop_rpc_server()
+-        FreeCAD.Console.PrintMessage(msg + "\n")
++        FreeCAD.Console.PrintMessage("StopRPCServerCommand Activated.\\n")
++        try:
++            msg = stop_rpc_server()
++            FreeCAD.Console.PrintMessage(f"stop_rpc_server returned: {msg}\\n")
++        except Exception as e:
++             error_msg = f"!!! EXCEPTION calling stop_rpc_server: {str(e)}\\n"
++            FreeCAD.Console.PrintError(error_msg)
++            print(error_msg)
+ 
+     def IsActive(self):
+-        return True
++        global rpc_server_instance
++        return rpc_server_instance is not None
+ 
+ 
+ FreeCADGui.addCommand("Start_RPC_Server", StartRPCServerCommand())
+diff --git a/src/freecad_mcp/server.py b/src/freecad_mcp/server.py
+index f848109..608922e 100644
+--- a/src/freecad_mcp/server.py
++++ b/src/freecad_mcp/server.py
+@@ -18,7 +18,7 @@ _only_text_feedback = False
+ 
+ 
+ class FreeCADConnection:
+-    def __init__(self, host: str = "localhost", port: int = 9875):
++    def __init__(self, host: str = "localhost", port: int = 9876):
+         self.server = xmlrpc.client.ServerProxy(f"http://{host}:{port}", allow_none=True)
+ 
+     def ping(self) -> bool:
+@@ -85,14 +85,14 @@ mcp = FastMCP(
+ )
+ 
+ 
+-_freecad_connection: FreeCADConnection | None = None
++_freecad_connection = FreeCADConnection(host="localhost", port=9876)
+ 
+ 
+ def get_freecad_connection():
+     """Get or create a persistent FreeCAD connection"""
+     global _freecad_connection
+     if _freecad_connection is None:
+-        _freecad_connection = FreeCADConnection(host="localhost", port=9875)
++        _freecad_connection = FreeCADConnection(host="localhost", port=9876)
+         if not _freecad_connection.ping():
+             logger.error("Failed to ping FreeCAD")
+             _freecad_connection = None
