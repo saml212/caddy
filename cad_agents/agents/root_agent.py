@@ -6,7 +6,7 @@ from . import design_agent, analysis_agent
 # Define a root agent that can delegate to specialized agents
 root_agent = Agent(
     name="cad_assistant",
-    model="gemini-2.0-pro",
+    model="gemini-2.5-pro",
     description="Main CAD assistant that understands user intent and delegates to specialized agents.",
     instruction="""
 You are a CAD assistant that helps engineers design and analyze 3D models.

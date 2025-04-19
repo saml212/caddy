@@ -2,10 +2,11 @@
 
 import logging
 import os
+import asyncio
 from dotenv import load_dotenv
 
 from .agents.root_agent import root_agent
-from .utils.mcp_utils import check_mcp_connection
+from .utils.mcp_utils import get_mcp_tools_async, check_mcp_connection
 
 # Configure logging
 logging.basicConfig(
@@ -15,8 +16,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def setup_environment():
-    """Load environment variables and check connections."""
+async def setup_environment_async():
+    """Load environment variables and check connections asynchronously."""
     # Load environment variables from .env file
     load_dotenv()
     
@@ -30,18 +31,36 @@ def setup_environment():
             logger.error("GOOGLE_API_KEY must be set when not using Vertex AI")
             return False
     
-    # Check MCP connection
-    logger.info("Checking FreeCAD MCP connection...")
-    if not check_mcp_connection():
-        logger.warning("Could not connect to FreeCAD MCP server. Make sure it's running.")
+    # Check MCP connection using the new async method
+    logger.info("Checking FreeCAD MCP connection using ADK MCPToolset...")
+    try:
+        tools, exit_stack = await get_mcp_tools_async()
+        
+        if tools and exit_stack:
+            logger.info(f"Successfully connected to FreeCAD MCP server. Found {len(tools)} tools.")
+            
+            # Make sure we clean up properly
+            await exit_stack.aclose()
+            return True
+        else:
+            logger.warning("Could not connect to FreeCAD MCP server. Make sure it's running.")
+            return False
+    except Exception as e:
+        logger.error(f"Error testing MCP connection: {e}")
         return False
-    
-    logger.info("Environment setup completed successfully.")
-    return True
 
-def start_app():
-    """Start the CAD Agents application."""
-    if not setup_environment():
+def setup_environment():
+    """Load environment variables and check connections synchronously."""
+    # For backward compatibility with non-async code
+    try:
+        return asyncio.run(setup_environment_async())
+    except Exception as e:
+        logger.error(f"Error in setup_environment: {e}")
+        return False
+
+async def start_app_async():
+    """Start the CAD Agents application asynchronously."""
+    if not await setup_environment_async():
         logger.error("Failed to set up environment. Please check the logs for details.")
         return False
     
@@ -50,6 +69,15 @@ def start_app():
     # In a real application, you would start a web server or other interface here
     # For now, we just return the root agent for the ADK CLI to use
     return root_agent
+
+def start_app():
+    """Start the CAD Agents application."""
+    # For backward compatibility with non-async code
+    try:
+        return asyncio.run(start_app_async())
+    except Exception as e:
+        logger.error(f"Error in start_app: {e}")
+        return False
 
 if __name__ == "__main__":
     start_app() 

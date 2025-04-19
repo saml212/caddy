@@ -4,7 +4,7 @@ This guide will help you set up and run the CAD Agents system.
 
 ## Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher (required for MCP tools)
 - [FreeCAD](https://www.freecad.org/downloads.php) with MCP server enabled
 - Google Cloud account (for Vertex AI) or Google AI API key
 
@@ -14,7 +14,7 @@ This guide will help you set up and run the CAD Agents system.
 
 1. Install [uv](https://github.com/astral-sh/uv) if you don't have it already:
    ```bash
-   curl -sSf https://install.pypa.io/rs/uv | python -
+   curl -sSf https://install.pypa.io/rs/uv | python3 -
    ```
 
 2. Clone the repository and navigate to it:
@@ -25,7 +25,7 @@ This guide will help you set up and run the CAD Agents system.
 
 3. Create a virtual environment and install dependencies:
    ```bash
-   uv venv
+   uv venv --python=python3.10  # Python 3.10 or higher is required
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv pip install -e .
    ```
@@ -40,7 +40,7 @@ This guide will help you set up and run the CAD Agents system.
 
 2. Create a virtual environment and install dependencies:
    ```bash
-   python -m venv .venv
+   python3.10 -m venv .venv  # Use Python 3.10 or higher
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    pip install -e .
    ```
@@ -86,4 +86,6 @@ adk web
 adk run cad_agents.main
 ```
 
-## Using Docker (Coming Soon) 
+## Using Docker (Coming Soon)
+
+Docker support will be added in a future release. 

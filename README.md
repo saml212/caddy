@@ -26,14 +26,14 @@ The system consists of multiple specialized agents that work together to provide
 
 ```bash
 # Install uv if you don't have it
-curl -sSf https://install.pypa.io/rs/uv | python -
+curl -sSf https://install.pypa.io/rs/uv | python3 -
 
 # Clone the repository
 git clone https://github.com/saml212/caddy.git
 cd caddy
 
 # Create virtual environment and install dependencies
-uv venv
+uv venv --python=python3.10  # Python 3.10 or higher is required
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e .
 
@@ -58,7 +58,7 @@ adk run cad_agents.main
 
 ## Prerequisites
 
-- Python 3.9 or higher
+- Python 3.10 or higher (required for MCP tools)
 - FreeCAD with MCP server enabled
 - Google Cloud account (for Vertex AI) or Google AI API key
 

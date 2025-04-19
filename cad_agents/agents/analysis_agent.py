@@ -8,7 +8,7 @@ from ..tools import freecad_tools
 
 analysis_agent = Agent(
     name="analysis_agent",
-    model="gemini-2.0-pro",
+    model="gemini-2.5-pro",
     description="Agent responsible for analyzing CAD models.",
     instruction="""
 You are an analysis agent specialized in evaluating CAD models created with FreeCAD.

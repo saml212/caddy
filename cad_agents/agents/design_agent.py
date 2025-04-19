@@ -5,7 +5,7 @@ from ..tools import freecad_tools
 
 design_agent = Agent(
     name="design_agent",
-    model="gemini-2.0-pro",
+    model="gemini-2.5-pro",
     description="Agent responsible for creating and modifying CAD models.",
     instruction="""
 You are a design agent specialized in creating CAD models using FreeCAD.
