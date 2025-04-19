@@ -34,7 +34,7 @@ ENV/
 .DS_Store
 
 # Environment variables
-.env
+# .env  # Temporarily allowing .env to be committed for hackathon purposes
 
 # Logs
 *.log
