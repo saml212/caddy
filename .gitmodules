@@ -1,0 +1,3 @@
+[submodule "freecad-mcp"]
+	path = freecad-mcp
+	url = https://github.com/neka-nat/freecad-mcp.git
