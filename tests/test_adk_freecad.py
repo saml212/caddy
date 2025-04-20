@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def setup_mcp_environment():
     """Set up the environment to use FreeCAD MCP."""
     # Get the project root directory
-    root_dir = Path(__file__).parent
+    root_dir = Path(__file__).parent.parent  # Changed to parent.parent to get the main project directory
     mcp_src_dir = root_dir / "freecad-mcp" / "src"
     
     if mcp_src_dir.exists():
@@ -36,7 +36,7 @@ async def run_freecad_mcp_server():
     """Run the FreeCAD MCP server as a subprocess."""
     try:
         # Get the absolute path to the freecad-mcp module
-        root_dir = Path(__file__).parent
+        root_dir = Path(__file__).parent.parent  # Changed to parent.parent
         mcp_src_dir = root_dir / "freecad-mcp" / "src"
         
         if not mcp_src_dir.exists():
@@ -101,7 +101,7 @@ async def test_adk_with_freecad():
             logger.info("Connecting to FreeCAD MCP server using ADK's MCPToolset...")
             
             # Get the absolute path to the freecad-mcp module
-            root_dir = Path(__file__).parent
+            root_dir = Path(__file__).parent.parent  # Changed to parent.parent
             mcp_src_dir = root_dir / "freecad-mcp" / "src"
             
             # Set up server parameters
